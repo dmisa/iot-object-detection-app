@@ -1,7 +1,6 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from PIL import Image
-import io
+from app.routes.detect import router as detect_router
 
 app = FastAPI()
 
@@ -14,10 +13,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize detector
-#detector = ObjectDetector(model_path="models/model.tflite")
-#@app.post("/detect")
-
+# Include routes
+app.include_router(detect_router)
 
 if __name__ == "__main__":
     import uvicorn
