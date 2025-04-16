@@ -17,21 +17,46 @@
 </script>
 
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
-  body {
-    margin: 0;
-    padding: 0;
-    background-color: black;
-  }
-	#app {
-		font-family: Roboto, Helvetica, Arial, sans-serif;
-		-webkit-font-smoothing: antialiased;
-		-moz-osx-font-smoothing: grayscale;
-		text-align: center;
-		color: white;
-    @media (min-width: 1024px) {
-      max-width: 70%;
-      margin: 0 auto;
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+
+    :root {
+        /* Color variables */
+        --primary-color: #2c3e50;
+        --secondary-color: #34495e;
+        --background-color: black;
+        --text-color: white;
+        --muted-text-color: #9A9D9E;
+
+        /* Spacing variables */
+        --padding-small: 0.5rem;
+        --padding-medium: 1rem;
+        --padding-large: 2rem;
+
+        /* Font sizes */
+        --font-size-small: 0.9rem;
+        --font-size-medium: 1rem;
+        --font-size-large: 1.5rem;
+        --font-size-heading: 2.5rem;
+
+        /* Border radius */
+        --border-radius: 5px;
     }
-	}
+
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: var(--background-color);
+        color: var(--text-color);
+        font-family: Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    #app {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-align: center;
+        @media (min-width: 1024px) {
+            max-width: 70%;
+            margin: 0 auto;
+        }
+    }
 </style>
