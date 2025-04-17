@@ -5,6 +5,8 @@ from app.services.model_loader import interpreter, input_details, output_details
 from app.services.label_loader import CATEGORY_INDEX
 from app.utils.preprocess import preprocess_image
 from app.utils.postprocess import process_detections
+from fastapi.responses import JSONResponse
+from starlette.status import HTTP_400_BAD_REQUEST
 
 router = APIRouter()
 
@@ -32,4 +34,7 @@ async def detect(file: UploadFile = File(...)):
         detections = process_detections(output_data, class_data, scores_data, original_width, original_height, CATEGORY_INDEX)
         return {"detections": detections}
     except Exception as e:
-        return {"error": str(e)}
+        return JSONResponse(
+            status_code=HTTP_400_BAD_REQUEST,
+            content={"error": str(e)}
+        )

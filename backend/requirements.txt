@@ -6,3 +6,4 @@ websockets
 numpy
 python-multipart
 opencv-python
+python-dotenv

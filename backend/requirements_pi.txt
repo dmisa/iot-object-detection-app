@@ -6,3 +6,4 @@ numpy
 python-multipart
 opencv-python
 tflite_runtime
+python-dotenv
