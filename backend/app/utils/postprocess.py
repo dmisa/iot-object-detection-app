@@ -1,6 +1,6 @@
 import numpy as np
 
-def non_max_suppression(boxes, scores, iou_threshold, score_threshold):
+def non_max_suppression(boxes, scores, iou_threshold):
     # Convert to NumPy arrays if necessary
     boxes = np.array(boxes)
     scores = np.array(scores)
@@ -79,7 +79,7 @@ def process_detections(output_data, class_data, scores_data, original_width, ori
             scores[0, i, class_index] = confidence
 
         # Apply Non-Maximum Suppression
-        selected_indices = non_max_suppression(boxes[0].reshape(-1, 4), scores[0].reshape(-1), iou_threshold, confidence_threshold)
+        selected_indices = non_max_suppression(boxes[0].reshape(-1, 4), scores[0].reshape(-1), iou_threshold)
 
         # Extract valid detections
         detections = []
