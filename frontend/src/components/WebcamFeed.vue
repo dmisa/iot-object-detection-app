@@ -1,5 +1,5 @@
 <template>
-  <div class="webcam-container">
+  <div ref="videoWrapper" class="webcam-container">
     <video ref="webcam" autoplay playsinline></video>
     <canvas ref="videoCanvas" class="video-canvas"></canvas>
     <canvas ref="overlayCanvas" class="overlay-canvas"></canvas>
@@ -38,11 +38,19 @@ export default {
     renderVideoToCanvas() {
       const video = this.$refs.webcam;
       const videoCanvas = this.$refs.videoCanvas;
+      const videoWrapper = this.$refs.videoWrapper;
+
       const context = videoCanvas.getContext("2d");
 
       // Set canvas dimensions to match the video
       videoCanvas.width = video.videoWidth;
       videoCanvas.height = video.videoHeight;
+
+      videoCanvas.style.width = `${videoCanvas.width}px`;
+      videoCanvas.style.height = `${videoCanvas.height}px`;
+
+      videoWrapper.style.width = `${video.videoWidth}px`;
+      videoWrapper.style.height = `${video.videoHeight}px`;
 
       const render = () => {
         // Ensure the video feed is ready before drawing
@@ -128,6 +136,5 @@ video {
   left: 0;
   width: 80%;
   max-width: 640px;
-  pointer-events: none; /* Prevent interaction with the canvas */
 }
 </style>
