@@ -1,8 +1,7 @@
 <template>
   <div class="webcam-app">
-    <HeroIntro />
     <div class="webcam-controls">
-      <button @click="toggleWebcam" class="toggle-webcam-button">
+      <button @click="toggleWebcam" class="toggle-webcam-button primary">
         {{ isWebcamActive ? "Stop Webcam" : "Start Webcam" }}
       </button>
     </div>
@@ -21,14 +20,12 @@
 </template>
 
 <script>
-import HeroIntro from "./HeroIntro.vue";
 import WebcamFeed from "./WebcamFeed.vue";
 
 export default {
   name: "WebcamApp",
   components: {
     WebcamFeed,
-    HeroIntro,
   },
   data() {
     return {

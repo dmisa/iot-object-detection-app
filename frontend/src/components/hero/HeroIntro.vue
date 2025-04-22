@@ -21,7 +21,7 @@
         text-align: center;
         color: white;
         font-family: 'Roboto', sans-serif;
-        padding: 2rem;
+        padding: 2rem 0 0 0;
     }
 
     h1 {

@@ -7,7 +7,7 @@
 </template>
 
 <script>
-import { getRandomColor } from "../utils/labelColors";
+import { getRandomColor } from "../../utils/labelColors";
 
 export default {
   name: "WebcamFeed",
@@ -134,7 +134,7 @@ video {
   position: absolute;
   top: 0;
   left: 0;
-  width: 80%;
+  width: 100%;
   max-width: 640px;
 }
 </style>
