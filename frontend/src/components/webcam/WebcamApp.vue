@@ -56,8 +56,6 @@ export default {
         const data = JSON.parse(event.data);
         if (data.detections) {
           this.detections = data.detections;
-
-          // Pass detections to WebcamFeed to draw bounding boxes
           const webcamFeed = this.$refs.webcamFeed;
           webcamFeed.drawBoundingBoxes(this.detections);
         } else if (data.error) {
@@ -79,13 +77,8 @@ export default {
       const webcamFeed = this.$refs.webcamFeed;
 
       while (this.isWebcamActive && this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-        // Capture the current frame as Base64-encoded image data
         const imageData = webcamFeed.captureFrame();
-
-        // Send the Base64 image data to the backend
         this.websocket.send(imageData);
-
-        // Wait for a short interval before sending the next frame
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
     },
@@ -94,11 +87,37 @@ export default {
 </script>
 
 <style>
-.webcam-app {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-}
+  .webcam-app {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
 
+  .detections-container {
+    margin-top: 20px;
+    background-color: #2c2c2c;
+    color: #ffffff;
+    padding: 10px;
+    border-radius: 5px;
+    width: 100%;
+    max-width: 640px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+  }
+
+  .detections-container h3 {
+    color: #ffffff;
+  }
+
+  .detections-container ul {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  .detections-container li {
+    margin: 5px 0;
+    padding: 5px;
+    background-color: #444444;
+    color: #ffffff;
+  }
 </style>

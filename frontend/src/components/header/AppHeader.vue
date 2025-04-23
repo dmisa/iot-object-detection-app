@@ -15,22 +15,21 @@ export default {
 </script>
 
 <style scoped>
-.header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #111111;
-    border-radius: 3rem;
-    width: 70%;
-    margin: 1rem auto 0 auto;
-
-    @media screen and (min-width: 1024px) {
-        width: 90%;
+    .header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #111111;
+        border-radius: 3rem;
+        width: 70%;
         margin: 1rem auto 0 auto;
+        @media screen and (min-width: 1024px) {
+            width: 90%;
+            margin: 1rem auto 0 auto;
+        }
     }
-}
-.logo {
-    height: 75px;
-    width: auto;
-}
+    .logo {
+        height: 75px;
+        width: auto;
+    }
 </style>

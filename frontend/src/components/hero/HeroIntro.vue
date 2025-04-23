@@ -23,7 +23,6 @@
         font-family: 'Roboto', sans-serif;
         padding: 2rem 0 0 0;
     }
-
     h1 {
         font-size: 2.5rem;
         margin-bottom: 1rem;
@@ -31,6 +30,6 @@
 
     p {
         font-size: 1.2rem;
-        color: #9A9D9E;
+        color: var(--muted-text-color);
     }
 </style>

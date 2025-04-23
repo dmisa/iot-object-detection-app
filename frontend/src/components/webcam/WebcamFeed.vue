@@ -29,53 +29,54 @@ export default {
         // Wait for the video to be ready
         video.onloadedmetadata = () => {
           video.play();
+          this.setupCanvasDimensions();
           this.renderVideoToCanvas();
         };
       } catch (error) {
         console.error("Error accessing webcam:", error);
       }
     },
+    setupCanvasDimensions() {
+      const video = this.$refs.webcam;
+      const videoCanvas = this.$refs.videoCanvas;
+      const overlayCanvas = this.$refs.overlayCanvas;
+      const videoWrapper = this.$refs.videoWrapper;
+
+      // Set canvas dimensions to match the video
+      const width = video.videoWidth;
+      const height = video.videoHeight;
+
+      [videoCanvas, overlayCanvas].forEach((canvas) => {
+        canvas.width = width;
+        canvas.height = height;
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+      });
+
+      videoWrapper.style.width = `${width}px`;
+      videoWrapper.style.height = `${height}px`;
+    },
     renderVideoToCanvas() {
       const video = this.$refs.webcam;
       const videoCanvas = this.$refs.videoCanvas;
-      const videoWrapper = this.$refs.videoWrapper;
-
       const context = videoCanvas.getContext("2d");
 
-      // Set canvas dimensions to match the video
-      videoCanvas.width = video.videoWidth;
-      videoCanvas.height = video.videoHeight;
-
-      videoCanvas.style.width = `${videoCanvas.width}px`;
-      videoCanvas.style.height = `${videoCanvas.height}px`;
-
-      videoWrapper.style.width = `${video.videoWidth}px`;
-      videoWrapper.style.height = `${video.videoHeight}px`;
-
       const render = () => {
-        // Ensure the video feed is ready before drawing
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
           context.drawImage(video, 0, 0, videoCanvas.width, videoCanvas.height);
         }
-        requestAnimationFrame(render); // Continuously render the video feed
+        requestAnimationFrame(render);
       };
 
       render();
     },
     captureFrame() {
       const videoCanvas = this.$refs.videoCanvas;
-
-      // Capture the current frame from the video canvas
-      const base64Image = videoCanvas.toDataURL("image/jpeg"); // Get the full Base64 string
-      return base64Image.split(",")[1]; // Remove the "data:image/jpeg;base64," prefix
+      return videoCanvas.toDataURL("image/jpeg").split(",")[1];
     },
     drawBoundingBoxes(detections) {
       const overlayCanvas = this.$refs.overlayCanvas;
       const context = overlayCanvas.getContext("2d");
-
-      // Set canvas dimensions to match the video
-      overlayCanvas.width = this.$refs.videoCanvas.width;
-      overlayCanvas.height = this.$refs.videoCanvas.height;
 
       // Clear the overlay canvas
       context.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
@@ -84,19 +85,18 @@ export default {
       detections.forEach((detection) => {
         const { ymin, xmin, ymax, xmax, label, confidence } = detection;
 
-        // Assign a color to the label if it doesn't already have one
         if (!this.labelColorMap[label]) {
           this.labelColorMap[label] = getRandomColor();
         }
         const color = this.labelColorMap[label];
 
         // Draw the rectangle
-        context.strokeStyle = color; // Use the color from the mapping
+        context.strokeStyle = color;
         context.lineWidth = 2;
         context.strokeRect(xmin, ymin, xmax - xmin, ymax - ymin);
 
         // Draw the label and confidence
-        context.fillStyle = color; // Use the color from the mapping
+        context.fillStyle = color;
         context.font = "16px Arial";
         context.fillText(
           `${label} (${(confidence * 100).toFixed(1)}%)`,
@@ -115,26 +115,34 @@ export default {
   justify-content: center;
   align-items: center;
   position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
 }
 
 video {
   display: none;
 }
 
-.video-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 80%;
-  max-width: 640px;
-  border-radius: 8px;
-}
-
+.video-canvas,
 .overlay-canvas {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  max-width: 640px;
+  height: auto;
+  border-radius: 8px;
+}
+
+@media screen and (max-width: 768px) {
+  .webcam-container {
+    max-width: 100%;
+    padding: 0 10px;
+  }
+
+  .video-canvas,
+  .overlay-canvas {
+    border-radius: 4px;
+  }
 }
 </style>

@@ -55,9 +55,10 @@ def non_max_suppression(boxes, scores, iou_threshold):
 
 def process_detections(output_data, class_data, scores_data, original_width, original_height, category_index, confidence_threshold=0.5, iou_threshold=0.5):
     try:
+        max_class_index = max(category_index.keys())  # Get the maximum class index
         num_detections = len(output_data[0])  # Assuming batch size of 1
-        boxes = np.zeros([1, num_detections, len(category_index), 4])  # Shape: [batch_size, num_boxes, num_classes, 4]
-        scores = np.zeros([1, num_detections, len(category_index)])  # Shape: [batch_size, num_boxes, num_classes]
+        boxes = np.zeros([1, num_detections, max_class_index + 1, 4])  # Shape: [batch_size, num_boxes, num_classes, 4]
+        scores = np.zeros([1, num_detections, max_class_index + 1])  # Shape: [batch_size, num_boxes, num_classes]
 
         for i in range(num_detections):
             ymin, xmin, ymax, xmax = output_data[0][i]
@@ -75,8 +76,9 @@ def process_detections(output_data, class_data, scores_data, original_width, ori
             xmax = min(1, xmax)
 
             # Assign the box and score to the appropriate class
-            boxes[0, i, class_index, :] = [ymin, xmin, ymax, xmax]
-            scores[0, i, class_index] = confidence
+            if class_index in category_index:  # Ensure the class index exists in CATEGORY_INDEX
+                boxes[0, i, class_index, :] = [ymin, xmin, ymax, xmax]
+                scores[0, i, class_index] = confidence
 
         # Apply Non-Maximum Suppression
         selected_indices = non_max_suppression(boxes[0].reshape(-1, 4), scores[0].reshape(-1), iou_threshold)
@@ -84,7 +86,7 @@ def process_detections(output_data, class_data, scores_data, original_width, ori
         # Extract valid detections
         detections = []
         for index in selected_indices:
-            class_index = index % len(category_index)
+            class_index = index % (max_class_index + 1)  # Use max_class_index + 1 for modulo
             ymin, xmin, ymax, xmax = boxes[0].reshape(-1, 4)[index]
 
             ymin = int(ymin * original_height)
@@ -101,7 +103,7 @@ def process_detections(output_data, class_data, scores_data, original_width, ori
                 "ymax": ymax,
                 "xmax": xmax,
                 "label": label,
-                "confidence": confidence  # Ensure this is a Python float
+                "confidence": confidence
             })
 
         return detections
