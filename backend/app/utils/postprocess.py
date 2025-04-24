@@ -86,6 +86,10 @@ def process_detections(output_data, class_data, scores_data, original_width, ori
         # Extract valid detections
         detections = []
         for index in selected_indices:
+            confidence = float(scores[0].reshape(-1)[index])  # Convert to standard Python float
+            if confidence < confidence_threshold:  # Skip detections with low confidence
+                continue
+
             class_index = index % (max_class_index + 1)  # Use max_class_index + 1 for modulo
             ymin, xmin, ymax, xmax = boxes[0].reshape(-1, 4)[index]
 
@@ -94,7 +98,6 @@ def process_detections(output_data, class_data, scores_data, original_width, ori
             ymax = int(ymax * original_height)
             xmax = int(xmax * original_width)
 
-            confidence = float(scores[0].reshape(-1)[index])  # Convert to standard Python float
             label = category_index.get(class_index, {"name": "unknown"})['name']
 
             detections.append({

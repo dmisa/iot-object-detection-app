@@ -18,6 +18,10 @@ export default {
   },
   mounted() {
     this.startWebcam();
+    window.addEventListener("resize", this.onResize);
+  },
+  beforeUnmount() {
+    window.removeEventListener("resize", this.onResize);
   },
   methods: {
     async startWebcam() {
@@ -42,19 +46,33 @@ export default {
       const overlayCanvas = this.$refs.overlayCanvas;
       const videoWrapper = this.$refs.videoWrapper;
 
-      // Set canvas dimensions to match the video
-      const width = video.videoWidth;
-      const height = video.videoHeight;
+      // Get the original video dimensions
+      const originalWidth = video.videoWidth;
+      const originalHeight = video.videoHeight;
 
+      // Calculate the aspect ratio
+      const aspectRatio = originalWidth / originalHeight;
+
+      // Set the container width based on the screen size
+      const containerWidth = Math.min(window.innerWidth * 0.9, 640); // 90% of screen width or max 640px
+      const containerHeight = containerWidth / aspectRatio;
+
+      // Update canvas and container dimensions
       [videoCanvas, overlayCanvas].forEach((canvas) => {
-        canvas.width = width;
-        canvas.height = height;
-        canvas.style.width = `${width}px`;
-        canvas.style.height = `${height}px`;
+        canvas.width = originalWidth;
+        canvas.height = originalHeight;
+        canvas.style.width = `${containerWidth}px`;
+        canvas.style.height = `${containerHeight}px`;
       });
 
-      videoWrapper.style.width = `${width}px`;
-      videoWrapper.style.height = `${height}px`;
+      videoWrapper.style.width = `${containerWidth}px`;
+      videoWrapper.style.height = `${containerHeight}px`;
+    },
+    onResize() {
+      // Recalculate dimensions on window resize
+      if (this.$refs.webcam.readyState === this.$refs.webcam.HAVE_ENOUGH_DATA) {
+        this.setupCanvasDimensions();
+      }
     },
     renderVideoToCanvas() {
       const video = this.$refs.webcam;
@@ -118,9 +136,11 @@ export default {
   width: 100%;
   max-width: 640px;
   margin: 0 auto;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
 }
 
-video {
+.webcam-container video{
   display: none;
 }
 

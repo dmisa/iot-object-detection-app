@@ -22,10 +22,9 @@ export default {
         background-color: #111111;
         border-radius: 3rem;
         width: 70%;
-        margin: 1rem auto 0 auto;
+        margin: 0 auto;
         @media screen and (min-width: 1024px) {
             width: 90%;
-            margin: 1rem auto 0 auto;
         }
     }
     .logo {
