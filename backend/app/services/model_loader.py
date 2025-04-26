@@ -1,6 +1,6 @@
 import os
 import logging
-import tensorflow.lite as tflite
+from tflite_runtime.interpreter import Interpreter  # Correct import for tflite_runtime
 from dotenv import load_dotenv
 
 # Load environment variables from .env
@@ -18,7 +18,7 @@ def load_tflite_model(model_path: str):
     
     try:
         logger.info(f"📦 Loading model from: {model_path}")
-        interpreter = tflite.Interpreter(model_path=model_path)
+        interpreter = Interpreter(model_path=model_path)  # Use the correct Interpreter class
         interpreter.allocate_tensors()
         input_details = interpreter.get_input_details()
         output_details = interpreter.get_output_details()
