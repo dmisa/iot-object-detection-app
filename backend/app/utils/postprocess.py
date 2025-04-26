@@ -1,113 +1,78 @@
 import numpy as np
 
 def non_max_suppression(boxes, scores, iou_threshold):
-    # Convert to NumPy arrays if necessary
-    boxes = np.array(boxes)
-    scores = np.array(scores)
+    if len(boxes) == 0:
+        return []
 
-    # Initialize a list to keep track of the selected indices
+    # Convert boxes to (x1, y1, x2, y2) format
+    x1 = boxes[:, 1]
+    y1 = boxes[:, 0]
+    x2 = boxes[:, 3]
+    y2 = boxes[:, 2]
+
+    # Compute areas of the boxes
+    areas = (x2 - x1 + 1) * (y2 - y1 + 1)
+    order = scores.argsort()[::-1]  # Sort scores in descending order
+
     selected_indices = []
+    while order.size > 0:
+        i = order[0]
+        selected_indices.append(i)
 
-    # Sort the boxes by their confidence scores (in descending order)
-    sorted_indices = np.argsort(scores)[::-1]
+        # Compute IoU of the remaining boxes with the highest-scoring box
+        xx1 = np.maximum(x1[i], x1[order[1:]])
+        yy1 = np.maximum(y1[i], y1[order[1:]])
+        xx2 = np.minimum(x2[i], x2[order[1:]])
+        yy2 = np.minimum(y2[i], y2[order[1:]])
 
-    while len(sorted_indices) > 0:
-        # Pick the box with the highest score and remove it from the list
-        current_index = sorted_indices[0]
-        selected_indices.append(current_index)
-        sorted_indices = sorted_indices[1:]
+        w = np.maximum(0, xx2 - xx1 + 1)
+        h = np.maximum(0, yy2 - yy1 + 1)
+        intersection = w * h
+        union = areas[i] + areas[order[1:]] - intersection
+        iou = intersection / union
 
-        # Get the coordinates of the picked box
-        box = boxes[current_index]
-        x1, y1, x2, y2 = box
-
-        # Calculate the area of the picked box
-        box_area = (x2 - x1) * (y2 - y1)
-
-        # Calculate the intersection-over-union (IoU) for the remaining boxes
-        remaining_boxes = boxes[sorted_indices]
-        xx1 = np.maximum(x1, remaining_boxes[:, 0])
-        yy1 = np.maximum(y1, remaining_boxes[:, 1])
-        xx2 = np.minimum(x2, remaining_boxes[:, 2])
-        yy2 = np.minimum(y2, remaining_boxes[:, 3])
-
-        # Calculate intersection area
-        intersection_width = np.maximum(0, xx2 - xx1)
-        intersection_height = np.maximum(0, yy2 - yy1)
-        intersection_area = intersection_width * intersection_height
-
-        # Calculate union area
-        remaining_boxes_area = (remaining_boxes[:, 2] - remaining_boxes[:, 0]) * (remaining_boxes[:, 3] - remaining_boxes[:, 1])
-        union_area = box_area + remaining_boxes_area - intersection_area
-
-        if(union_area == 0).all():
-            break
-        # Calculate IoU
-        iou = np.where(union_area > 0, intersection_area / union_area, 0)
-
-        # Keep only the boxes with IoU less than the threshold
-        keep_indices = np.where(iou <= iou_threshold)[0]
-
-        # Update the sorted indices
-        sorted_indices = sorted_indices[keep_indices]
+        # Keep boxes with IoU below the threshold
+        remaining = np.where(iou <= iou_threshold)[0]
+        order = order[remaining + 1]
 
     return selected_indices
 
 def process_detections(output_data, class_data, scores_data, original_width, original_height, category_index, confidence_threshold=0.5, iou_threshold=0.5):
     try:
-        max_class_index = max(category_index.keys())  # Get the maximum class index
-        num_detections = len(output_data[0])  # Assuming batch size of 1
-        boxes = np.zeros([1, num_detections, max_class_index + 1, 4])  # Shape: [batch_size, num_boxes, num_classes, 4]
-        scores = np.zeros([1, num_detections, max_class_index + 1])  # Shape: [batch_size, num_boxes, num_classes]
+        # Convert outputs to NumPy arrays for vectorized operations
+        boxes = np.array(output_data[0])
+        scores = np.array(scores_data[0])
+        classes = np.array(class_data[0], dtype=int)
 
-        for i in range(num_detections):
-            ymin, xmin, ymax, xmax = output_data[0][i]
-            class_index = int(class_data[0][i])
-            confidence = float(scores_data[0][i])
+        # Filter detections by confidence threshold
+        valid_indices = scores >= confidence_threshold
+        boxes = boxes[valid_indices]
+        scores = scores[valid_indices]
+        classes = classes[valid_indices]
 
-            # Skip low-confidence detections
-            if confidence < confidence_threshold:
-                continue
-
-            # Scale bounding box coordinates to the original image size
-            ymin = max(0, ymin)
-            xmin = max(0, xmin)
-            ymax = min(1, ymax)
-            xmax = min(1, xmax)
-
-            # Assign the box and score to the appropriate class
-            if class_index in category_index:  # Ensure the class index exists in CATEGORY_INDEX
-                boxes[0, i, class_index, :] = [ymin, xmin, ymax, xmax]
-                scores[0, i, class_index] = confidence
+        # Scale bounding box coordinates to the original image size
+        boxes[:, [0, 2]] *= original_height
+        boxes[:, [1, 3]] *= original_width
+        boxes = boxes.astype(int)
 
         # Apply Non-Maximum Suppression
-        selected_indices = non_max_suppression(boxes[0].reshape(-1, 4), scores[0].reshape(-1), iou_threshold)
+        selected_indices = non_max_suppression(boxes, scores, iou_threshold)
+        boxes = boxes[selected_indices]
+        scores = scores[selected_indices]
+        classes = classes[selected_indices]
 
-        # Extract valid detections
-        detections = []
-        for index in selected_indices:
-            confidence = float(scores[0].reshape(-1)[index])  # Convert to standard Python float
-            if confidence < confidence_threshold:  # Skip detections with low confidence
-                continue
-
-            class_index = index % (max_class_index + 1)  # Use max_class_index + 1 for modulo
-            ymin, xmin, ymax, xmax = boxes[0].reshape(-1, 4)[index]
-
-            ymin = int(ymin * original_height)
-            xmin = int(xmin * original_width)
-            ymax = int(ymax * original_height)
-            xmax = int(xmax * original_width)
-
-            label = category_index.get(class_index, {"name": "unknown"})['name']
-
-            detections.append({
-                "ymin": ymin,
-                "xmin": xmin,
-                "ymax": ymax,
-                "xmax": xmax,
-                "label": label,
-                "confidence": confidence
-            })
+        # Prepare detections for output
+        detections = [
+            {
+                "ymin": int(box[0]),
+                "xmin": int(box[1]),
+                "ymax": int(box[2]),
+                "xmax": int(box[3]),
+                "label": category_index.get(cls, {"name": "unknown"})["name"],
+                "confidence": float(score)
+            }
+            for box, cls, score in zip(boxes, classes, scores)
+        ]
 
         return detections
 

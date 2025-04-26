@@ -79,7 +79,7 @@ export default {
       while (this.isWebcamActive && this.websocket && this.websocket.readyState === WebSocket.OPEN) {
         const imageData = webcamFeed.captureFrame();
         this.websocket.send(imageData);
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
     },
   },

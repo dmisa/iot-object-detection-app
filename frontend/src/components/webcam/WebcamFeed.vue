@@ -90,7 +90,7 @@ export default {
     },
     captureFrame() {
       const videoCanvas = this.$refs.videoCanvas;
-      return videoCanvas.toDataURL("image/jpeg").split(",")[1];
+      return videoCanvas.toDataURL("image/jpeg", 0.6).split(",")[1];
     },
     drawBoundingBoxes(detections) {
       const overlayCanvas = this.$refs.overlayCanvas;

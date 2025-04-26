@@ -14,8 +14,8 @@ interpreter_lock = asyncio.Lock()
 
 @router.websocket("/ws/detect")
 async def websocket_detect(websocket: WebSocket):
-    await websocket.accept()
     try:
+        await websocket.accept()
         while True:
             data = await websocket.receive_text()
 
