@@ -16,6 +16,7 @@ export default {
     return {
       labelColorMap: {},
       errorMessage: '',
+      fps: 30,
     };
   },
   mounted() {
@@ -24,6 +25,9 @@ export default {
   },
   beforeUnmount() {
     window.removeEventListener("resize", this.onResize);
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+    }
   },
   methods: {
     async startWebcam() {
@@ -81,15 +85,19 @@ export default {
       const video = this.$refs.webcam;
       const videoCanvas = this.$refs.videoCanvas;
       const context = videoCanvas.getContext("2d");
-
-      const render = () => {
-        if (video.readyState === video.HAVE_ENOUGH_DATA) {
-          context.drawImage(video, 0, 0, videoCanvas.width, videoCanvas.height);
+      let lastRenderTime = 0;
+      const interval = 1000 / this.fps;
+      const render = (timestamp) => {
+        if (timestamp - lastRenderTime >= interval) {
+          if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            context.drawImage(video, 0, 0, videoCanvas.width, videoCanvas.height);
+          }
+          lastRenderTime = timestamp;
         }
-        requestAnimationFrame(render);
+        this.animationFrameId = requestAnimationFrame(render);
       };
 
-      render();
+      this.animationFrameId = requestAnimationFrame(render);
     },
     captureFrame() {
       const videoCanvas = this.$refs.videoCanvas;
@@ -125,6 +133,11 @@ export default {
           ymin - 5
         );
       });
+    },
+    clearBoundingBoxes() {
+      const canvas = this.$refs.overlayCanvas;
+      const context = canvas.getContext("2d");
+      context.clearRect(0, 0, canvas.width, canvas.height);
     },
   },
 };

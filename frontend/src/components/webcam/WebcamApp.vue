@@ -9,7 +9,7 @@
       <WebcamFeed ref="webcamFeed" />
     </div>
 
-    <div v-if="detections.length" class="detections-container">
+    <div v-if="detections.length && !errorMessage" class="detections-container">
       <h3>Detections:</h3>
       <ul>
         <li v-for="(detection, index) in detections" :key="index">
@@ -66,17 +66,21 @@ export default {
       this.websocket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+          const webcamFeed = this.$refs.webcamFeed;
           if (data.detections) {
             this.detections = data.detections;
-            const webcamFeed = this.$refs.webcamFeed;
             webcamFeed.drawBoundingBoxes(this.detections);
           } else if (data.error) {
             console.error("Error from backend:", data.error);
             this.errorMessage = `Backend error: ${data.error}`;
+            this.detections = [];
+            webcamFeed.clearBoundingBoxes();
           }
         } catch (err) {
           console.error("Error parsing WebSocket message:", err);
           this.errorMessage = "Error processing data from server.";
+          this.detections = [];
+          this.$refs.webcamFeed.clearBoundingBoxes();
         }
       };
 
@@ -91,8 +95,12 @@ export default {
         if (this.isWebcamActive && this.retryCount < this.maxRetries) {
           this.retryCount++;
           this.errorMessage = `WebSocket connection lost. Retrying (${this.retryCount}/${this.maxRetries})...`;
+          this.detections = [];
+          this.$refs.webcamFeed.clearBoundingBoxes();
           setTimeout(() => this.startWebSocket(), 2000);
         } else if (this.isWebcamActive) {
+          this.detections = [];
+          this.$refs.webcamFeed.clearBoundingBoxes();
           this.errorMessage = "Failed to connect to WebSocket after multiple attempts.";
         }
       };
