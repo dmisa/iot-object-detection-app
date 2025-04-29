@@ -8,6 +8,7 @@
     <div v-if="isWebcamActive" class="webcam-feed-container">
       <WebcamFeed ref="webcamFeed" />
     </div>
+
     <div v-if="detections.length" class="detections-container">
       <h3>Detections:</h3>
       <ul>
@@ -16,6 +17,7 @@
         </li>
       </ul>
     </div>
+    <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
   </div>
 </template>
 
@@ -32,6 +34,9 @@ export default {
       isWebcamActive: false,
       detections: [],
       websocket: null,
+      retryCount: 0,
+      maxRetries: 5,
+      errorMessage: '',
     };
   },
   methods: {
@@ -42,37 +47,68 @@ export default {
         this.startWebSocket();
       } else {
         this.stopWebSocket();
+        this.detections = [];
+        this.errorMessage = '';
+        this.retryCount = 0;
       }
     },
+
     startWebSocket() {
       this.websocket = new WebSocket("ws://localhost:8000/ws/detect");
 
       this.websocket.onopen = () => {
         console.log("WebSocket connection established");
+        this.retryCount = 0;
+        this.errorMessage = '';
         this.sendFrames();
       };
 
       this.websocket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.detections) {
-          this.detections = data.detections;
-          const webcamFeed = this.$refs.webcamFeed;
-          webcamFeed.drawBoundingBoxes(this.detections);
-        } else if (data.error) {
-          console.error("Error from backend:", data.error);
+        try {
+          const data = JSON.parse(event.data);
+          if (data.detections) {
+            this.detections = data.detections;
+            const webcamFeed = this.$refs.webcamFeed;
+            webcamFeed.drawBoundingBoxes(this.detections);
+          } else if (data.error) {
+            console.error("Error from backend:", data.error);
+            this.errorMessage = `Backend error: ${data.error}`;
+          }
+        } catch (err) {
+          console.error("Error parsing WebSocket message:", err);
+          this.errorMessage = "Error processing data from server.";
         }
       };
 
+      this.websocket.onerror = (event) => {
+        console.error("WebSocket error:", event);
+        this.errorMessage = "WebSocket encountered an error.";
+      };
+
       this.websocket.onclose = () => {
-        console.log("WebSocket connection closed");
+        console.warn("WebSocket closed");
+
+        if (this.isWebcamActive && this.retryCount < this.maxRetries) {
+          this.retryCount++;
+          this.errorMessage = `WebSocket connection lost. Retrying (${this.retryCount}/${this.maxRetries})...`;
+          setTimeout(() => this.startWebSocket(), 2000);
+        } else if (this.isWebcamActive) {
+          this.errorMessage = "Failed to connect to WebSocket after multiple attempts.";
+        }
       };
     },
+
     stopWebSocket() {
       if (this.websocket) {
+        this.websocket.onopen = null;
+        this.websocket.onmessage = null;
+        this.websocket.onerror = null;
+        this.websocket.onclose = null;
         this.websocket.close();
         this.websocket = null;
       }
     },
+
     async sendFrames() {
       const webcamFeed = this.$refs.webcamFeed;
 
@@ -82,6 +118,10 @@ export default {
         await new Promise((resolve) => setTimeout(resolve, 200));
       }
     },
+  },
+
+  beforeUnmount() {
+    this.stopWebSocket();
   },
 };
 </script>
@@ -119,5 +159,11 @@ export default {
     padding: 5px;
     background-color: #444444;
     color: #ffffff;
+  }
+
+  .error {
+    color: red;
+    font-weight: bold;
+    padding: 1rem;
   }
 </style>

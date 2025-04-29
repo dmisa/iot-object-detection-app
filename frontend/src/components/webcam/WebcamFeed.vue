@@ -1,5 +1,6 @@
 <template>
   <div ref="videoWrapper" class="webcam-container">
+    <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
     <video ref="webcam" autoplay playsinline></video>
     <canvas ref="videoCanvas" class="video-canvas"></canvas>
     <canvas ref="overlayCanvas" class="overlay-canvas"></canvas>
@@ -14,6 +15,7 @@ export default {
   data() {
     return {
       labelColorMap: {},
+      errorMessage: '',
     };
   },
   mounted() {
@@ -38,6 +40,7 @@ export default {
         };
       } catch (error) {
         console.error("Error accessing webcam:", error);
+        this.errorMessage = 'Unable to access the webcam. Please check your permissions.';
       }
     },
     setupCanvasDimensions() {
@@ -128,41 +131,46 @@ export default {
 </script>
 
 <style>
-.webcam-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  width: 100%;
-  max-width: 640px;
-  margin: 0 auto;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
-  border-radius: 8px;
-}
-
-.webcam-container video{
-  display: none;
-}
-
-.video-canvas,
-.overlay-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: auto;
-  border-radius: 8px;
-}
-
-@media screen and (max-width: 768px) {
   .webcam-container {
-    max-width: 100%;
-    padding: 0 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+    border-radius: 8px;
+  }
+
+  .webcam-container video{
+    display: none;
   }
 
   .video-canvas,
   .overlay-canvas {
-    border-radius: 4px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
   }
-}
+
+  @media screen and (max-width: 768px) {
+    .webcam-container {
+      max-width: 100%;
+      padding: 0 10px;
+    }
+
+    .video-canvas,
+    .overlay-canvas {
+      border-radius: 4px;
+    }
+  }
+
+  .error {
+    color: red;
+    font-weight: bold;
+  }
 </style>
